@@ -5,7 +5,7 @@ const Dashboard = () => {
   // Datos ficticios de satisfacción del cliente por semanas
   const satisfactionData = [
     // Febrero (semanas 5-8)
-    { week: 5, satisfaction: 72, month: 'Feb' },
+    { week: 5, satisfaction: 45, month: 'Feb' },
     { week: 6, satisfaction: 75, month: 'Feb' },
     { week: 7, satisfaction: 73, month: 'Feb' },
     { week: 8, satisfaction: 78, month: 'Feb' },
@@ -151,7 +151,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-col">
             <div className="flex items-center mb-1">
               <h2 className="text-sm font-semibold text-slate-800">
-                Satisfacción del Cliente
+                Satisfacción atención al Alumno
               </h2>
             </div>
             
@@ -227,37 +227,37 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {createEvolutiveChart("Valoración Google")}
+          {createEvolutiveChart("Devoluciones")}
         </div>
 
         {/* Fila 2 */}
         <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart("Trustpilot")}
-          {createEvolutiveChart("NPS")}
+          {createEvolutiveChart("Puntuación Trustpilot")}
+          {createEvolutiveChart("Puntuación Google")}
         </div>
 
         {/* Fila 3 */}
         <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart("Tiempo de Respuesta")}
-          {createEvolutiveChart("Tasa de Resolución")}
+          {createEvolutiveChart("NPS Business School")}
+          {createEvolutiveChart("NPS IA School")}
         </div>
 
         {/* Fila 4 */}
         <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart("Satisfacción Empleados")}
-          {createEvolutiveChart("Volumen de Llamadas")}
+          {createEvolutiveChart("SNPS Tech School")}
+          {createEvolutiveChart("NPS Pharma")}
         </div>
 
         {/* Fila 5 */}
         <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart("Tasa de Retención")}
-          {createEvolutiveChart("Redes Sociales")}
+          {createEvolutiveChart("NPS FP")}
+          {createEvolutiveChart("NPS Oposiciones")}
         </div>
 
         {/* Fila 6 */}
         <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart("Puntuación de Calidad")}
-          {createEvolutiveChart("Tasa de Conversión")}
+          {createEvolutiveChart("NPS Tecnio")}
+          {createEvolutiveChart("NPS B2B")}
         </div>
 
       </div>
