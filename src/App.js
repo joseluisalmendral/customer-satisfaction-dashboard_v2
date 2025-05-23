@@ -6,8 +6,46 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  ReferenceDot
+  ReferenceDot,
+  // ReferenceLine, // No se usa en tu código, puedes quitarla si no la necesitas
+  Tooltip
 } from 'recharts';
+
+// --- INICIO: Helpers para la visualización de meses ---
+const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// Función para obtener el índice del mes (0-11) a partir del número de semana (1-53)
+// Esta es una aproximación de cómo se agrupan las semanas en meses.
+// Puedes ajustarla si tu numeración de semanas o calendario fiscal es diferente.
+const getMonthIndexFromWeek = (week) => {
+    if (week <= 4) return 0;   // Enero (aprox. semanas 1-4)
+    if (week <= 8) return 1;   // Febrero (aprox. semanas 5-8)
+    if (week <= 13) return 2;  // Marzo (aprox. semanas 9-13)
+    if (week <= 17) return 3;  // Abril (aprox. semanas 14-17)
+    if (week <= 21) return 4;  // Mayo (aprox. semanas 18-21)
+    if (week <= 26) return 5;  // Junio (aprox. semanas 22-26)
+    if (week <= 30) return 6;  // Julio (aprox. semanas 27-30)
+    if (week <= 34) return 7;  // Agosto (aprox. semanas 31-34)
+    if (week <= 39) return 8;  // Septiembre (aprox. semanas 35-39)
+    if (week <= 43) return 9;  // Octubre (aprox. semanas 40-43)
+    if (week <= 47) return 10; // Noviembre (aprox. semanas 44-47)
+    return 11;                 // Diciembre (aprox. semanas 48-52/53)
+};
+
+// Semanas de referencia para colocar las marcas de los meses.
+// Corresponden aproximadamente al inicio de cada mes según getMonthIndexFromWeek.
+const monthReferenceWeeks = [1, 5, 9, 14, 18, 22, 27, 31, 35, 40, 44, 48];
+
+// Nueva función formateadora para las marcas del eje X
+const formatXAxisTickWithMonthNames = (weekTick) => {
+    // weekTick es un número de semana de nuestro array monthReferenceWeeks
+    const monthIndex = getMonthIndexFromWeek(weekTick);
+    if (monthIndex >= 0 && monthIndex < 12) {
+        return monthNames[monthIndex];
+    }
+    return ''; // Fallback por si acaso
+};
+// --- FIN: Helpers para la visualización de meses ---
 
 const App = () => {
   const [dashboard, setDashboard] = useState({ percent: [], scores: [], nps: [] });
@@ -15,23 +53,24 @@ const App = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Realiza POST al webhook de producción
-    fetch('https://n8nalmendral.com/webhook/5188f2fb-dc67-4536-9d47-48badceae911', {
+    fetch('https://n8nalmendral.com/webhook/b0bb5a2a-2e78-48fe-bb31-180b15b55c43', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}) // Si necesitas enviar payload, añádelo aquí
+      body: JSON.stringify({})
     })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();
       })
       .then(json => {
-        console.log('Dashboard data recibida:', json); // Debug console.log
-        setDashboard({
-          percent: json.percent || [],
-          scores: json.scores || [],
-          nps: json.nps || []
-        });
+        console.log('Dashboard data recibida:', json);
+        const processedData = {
+          percent: json.filter(item => item.key === 'percent'),
+          scores: json.filter(item => item.key === 'scores'),
+          nps: json.filter(item => item.key === 'nps')
+        };
+        
+        setDashboard(processedData);
         setLoading(false);
       })
       .catch(err => {
@@ -41,76 +80,146 @@ const App = () => {
       });
   }, []);
 
-  if (loading) return <div>Cargando datos…</div>;
-  if (error)   return <div>Error: {error}</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center">Cargando datos…</div>;
+  if (error) return <div className="h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
 
   const { percent, scores, nps } = dashboard;
 
-  const formatXAxisTick = tickItem => {
-    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const positions = [6,15.5,24.5,33,42,50];
-    const idx = positions.findIndex(p => Math.abs(p - tickItem) < 1);
-    return idx >= 0 ? monthNames[idx] : '';
+  const CustomTooltip = ({ active, payload, label, isScore = false }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-1 shadow-lg rounded border border-slate-200">
+          <p className="text-xs text-slate-600">Sem {label}</p>
+          <p className="text-xs font-bold">
+            {isScore ? payload[0].value.toFixed(2) : `${payload[0].value}%`}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const createEvolutiveChart = (title, data, field) => {
-    if (!data.length) return null;
+  const createEvolutiveChart = (title, data, field, isScore = false) => {
+    if (!data || data.length === 0) {
+        console.warn(`No data for chart: ${title}`);
+        return (
+            <div key={title} className="bg-white rounded-lg shadow-sm border border-slate-200 p-0.5 flex-1 flex flex-col items-center justify-center">
+                 <h2 className="text-base font-bold text-slate-800 px-2">{title}</h2>
+                 <p className="text-sm text-slate-500">No hay datos disponibles.</p>
+            </div>
+        );
+    }
 
-    const values = data.map(d => d[field]);
+    const values = data.map(d => d[field]).filter(v => typeof v === 'number');
+    if (values.length === 0) {
+        console.warn(`No valid values for field '${field}' in chart: ${title}`);
+         return (
+            <div key={title} className="bg-white rounded-lg shadow-sm border border-slate-200 p-0.5 flex-1 flex flex-col items-center justify-center">
+                 <h2 className="text-base font-bold text-slate-800 px-2">{title}</h2>
+                 <p className="text-sm text-slate-500">No hay datos válidos para graficar.</p>
+            </div>
+        );
+    }
+
     const maxVal = Math.max(...values);
     const minVal = Math.min(...values);
-    const maxPt = data.find(d => d[field] === maxVal);
-    const minPt = data.find(d => d[field] === minVal);
+    // Asegurarse de que maxPt y minPt se encuentren incluso si hay múltiples puntos con el mismo valor
+    const maxPt = data.find(d => d[field] === maxVal && typeof d.week === 'number');
+    const minPt = data.find(d => d[field] === minVal && typeof d.week === 'number');
+    
+    const weeks = data.map(d => d.week).filter(w => typeof w === 'number');
+    if (weeks.length === 0) {
+        console.warn(`No valid week data for chart: ${title}`);
+        return (
+            <div key={title} className="bg-white rounded-lg shadow-sm border border-slate-200 p-0.5 flex-1 flex flex-col items-center justify-center">
+                 <h2 className="text-base font-bold text-slate-800 px-2">{title}</h2>
+                 <p className="text-sm text-slate-500">No hay datos de semanas válidos.</p>
+            </div>
+        );
+    }
+    const minWeek = Math.min(...weeks);
+    const maxWeek = Math.max(...weeks);
+
+    // Determinar qué marcas de meses son relevantes para el rango de semanas de los datos actuales
+    const activeMonthReferenceTicks = monthReferenceWeeks.filter(
+      (weekVal) => weekVal >= minWeek && weekVal <= maxWeek
+    );
+
+    const yDomain = isScore ? [0, 5] : [0, 100];
+    const formatYTick = isScore ? (v) => v : (v) => `${v}%`;
 
     return (
-      <div key={title} className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex-1">
-        <div className="flex items-center mb-1">
-          <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
-        </div>
-        <div className="flex-1 relative" style={{ height: 'calc(100% - 28px)' }}>
+      <div key={title} className="bg-white rounded-lg shadow-sm border border-slate-200 p-0.5 flex-1 flex flex-col">
+        <h2 className="text-base font-bold text-slate-800 px-2">{title}</h2>
+        <div className="relative flex-1" style={{ minHeight: '80px' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top:15, right:6, left:6, bottom:15 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal vertical={false} />
+            <LineChart data={data} margin={{ top:10, right:15, left:5, bottom:10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis
                 dataKey="week"
                 type="number"
                 scale="linear"
-                domain={[1,52]}
-                ticks={[6,15.5,24.5,33,42,50]}
-                tickFormatter={formatXAxisTick}
+                domain={[minWeek, maxWeek]} // Usar min/max real de las semanas en los datos
+                ticks={activeMonthReferenceTicks} // Usar nuestras marcas de meses calculadas
+                tickFormatter={formatXAxisTickWithMonthNames} // Usar el nuevo formateador
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize:9, fill:'#64748b' }}
+                tick={{ fontSize: 8, fill: '#64748b' }}
+                interval={0} // Intenta mostrar todas las marcas especificadas
               />
               <YAxis
-                domain={[0, 100]}
+                domain={yDomain}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize:9, fill:'#64748b' }}
-                tickFormatter={v => `${v}%`}
+                tick={{ fontSize: 8, fill: '#64748b' }}
+                tickFormatter={formatYTick}
+                ticks={isScore ? [0, 1, 2, 3, 4, 5] : [0, 25, 50, 75, 100]}
+                width={isScore ? 25 : 35} // Ancho para evitar corte de etiquetas Y
               />
+              <Tooltip content={<CustomTooltip isScore={isScore} />} />
               <Line
                 type="monotone"
                 dataKey={field}
                 stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill:'#3b82f6', r:1 }}
-                activeDot={{ r:3, stroke:'#3b82f6', strokeWidth:2 }}
+                strokeWidth={1.5}
+                dot={false}
+                activeDot={{ r: 3 }}
+                connectNulls={true} // Opcional: para conectar la línea si hay datos faltantes
               />
-              <ReferenceDot x={maxPt.week} y={maxVal} r={4} fill="#10b981" stroke="#fff" strokeWidth={1} />
-              <ReferenceDot x={minPt.week} y={minVal} r={4} fill="#ef4444" stroke="#fff" strokeWidth={1} />
+              {maxPt && typeof maxPt.week === 'number' && <ReferenceDot x={maxPt.week} y={maxVal} r={3} fill="#10b981" />}
+              {minPt && typeof minPt.week === 'number' && <ReferenceDot x={minPt.week} y={minVal} r={3} fill="#ef4444" />}
             </LineChart>
           </ResponsiveContainer>
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute text-xs font-semibold text-green-600"
-                 style={{ left: `${(maxPt.week/52)*100}%`, top:'5px', transform:'translateX(-50%)' }}>
-              {maxVal}%
+          {maxPt && typeof maxPt.week === 'number' && (
+            <div className="absolute font-bold text-green-600"
+                 style={{ 
+                   left: maxWeek > minWeek ? `${((maxPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%', // Ajuste para un solo punto
+                   top: maxVal > 80 || (isScore && maxVal > 4) ? '12px' : '2px', 
+                   transform: 'translateX(-50%)', 
+                   fontSize: '15px',
+                   backgroundColor: 'rgba(255,255,255,0.9)',
+                   padding: '0 3px',
+                   borderRadius: '2px',
+                   pointerEvents: 'none'
+                 }}>
+              {isScore ? maxVal.toFixed(1) : `${Math.round(maxVal)}%`} {/* Redondeado para % */}
             </div>
-            <div className="absolute text-xs font-semibold text-red-600"
-                 style={{ left: `${(minPt.week/52)*100}%`, bottom:'5px', transform:'translateX(-50%)' }}>
-              {minVal}%
+          )}
+          {minPt && typeof minPt.week === 'number' && (
+            <div className="absolute font-bold text-red-600"
+                 style={{ 
+                   left: maxWeek > minWeek ? `${((minPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%', // Ajuste para un solo punto
+                   bottom: minVal < 20 || (isScore && minVal < 1) ? '12px' : '2px', 
+                   transform: 'translate(-50%, -100%)', 
+                   fontSize: '14px',
+                   backgroundColor: 'rgba(255,255,255,0.9)',
+                   padding: '0 3px',
+                   borderRadius: '2px',
+                   pointerEvents: 'none'
+                 }}>
+              {isScore ? minVal.toFixed(1) : `${Math.round(minVal)}%`} {/* Redondeado para % */}
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -118,28 +227,35 @@ const App = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-1 flex flex-col">
-      <div className="w-full h-full flex flex-col gap-1">
-        <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart('Satisfacción atención al Alumno', percent, 'Student_Satisfaction')}
-          {createEvolutiveChart('Devoluciones', percent, 'Devoluciones')}
+      <div className="w-full h-full flex flex-col gap-0.5">
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-1 flex items-center justify-center">
+            <img 
+              src="https://i.vimeocdn.com/player/827126?sig=61658c9aa3e50f445b2339457f1c73a3fb8e29290471ca31061241b89955e45b&v=1" 
+              alt="Logo Corporativo"
+              className="rounded-md  p-1"
+              style={{ maxHeight: '60%', maxWidth: '60%', objectFit: 'contain' }}
+            />
+          </div>
+          {createEvolutiveChart('Satisfacción Atención al Alumno', percent, 'Student_Satisfaction')}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart('Puntuación Trustpilot', scores, 'Trustpilot')}
-          {createEvolutiveChart('Puntuación Google', scores, 'Google')}
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
+          {createEvolutiveChart('Puntuación Trustpilot', scores, 'Trustpilot', true)}
+          {createEvolutiveChart('Puntuación Google', scores, 'Google', true)}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1">
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
           {createEvolutiveChart('NPS Business School', nps, 'Business_School')}
           {createEvolutiveChart('NPS IA School', nps, 'IA_School')}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1">
-          {createEvolutiveChart('SNPS Tech School', nps, 'Tech_School')}
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
+          {createEvolutiveChart('NPS Tech School', nps, 'Tech_School')}
           {createEvolutiveChart('NPS Pharma', nps, 'Pharma')}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1">
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
           {createEvolutiveChart('NPS FP', nps, 'FP')}
           {createEvolutiveChart('NPS Oposiciones', nps, 'Oposiciones')}
         </div>
-        <div className="grid grid-cols-2 gap-2 flex-1">
+        <div className="grid grid-cols-2 gap-0.5 flex-1">
           {createEvolutiveChart('NPS Tecnio', nps, 'Tecnio')}
           {createEvolutiveChart('NPS B2B', nps, 'B2B')}
         </div>
