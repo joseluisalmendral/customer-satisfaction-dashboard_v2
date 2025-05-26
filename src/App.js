@@ -196,7 +196,7 @@ const App = () => {
                    left: maxWeek > minWeek ? `${((maxPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%', // Ajuste para un solo punto
                    top: maxVal > 80 || (isScore && maxVal > 4) ? '12px' : '2px', 
                    transform: 'translateX(-50%)', 
-                   fontSize: '15px',
+                   fontSize: '20px',
                    backgroundColor: 'rgba(255,255,255,0.9)',
                    padding: '0 3px',
                    borderRadius: '2px',
@@ -211,7 +211,7 @@ const App = () => {
                    left: maxWeek > minWeek ? `${((minPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%', // Ajuste para un solo punto
                    bottom: minVal < 20 || (isScore && minVal < 1) ? '12px' : '2px', 
                    transform: 'translate(-50%, -100%)', 
-                   fontSize: '14px',
+                   fontSize: '20px',
                    backgroundColor: 'rgba(255,255,255,0.9)',
                    padding: '0 3px',
                    borderRadius: '2px',
