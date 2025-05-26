@@ -48,7 +48,7 @@ const formatXAxisTickWithMonthNames = (weekTick) => {
 // --- FIN: Helpers para la visualización de meses ---
 
 const App = () => {
-  const [dashboard, setDashboard] = useState({ percent: [], scores: [], nps: [] });
+  const [dashboard, setDashboard] = useState({ percent: [], scores: [], nps: [], devoluciones: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -64,10 +64,12 @@ const App = () => {
       })
       .then(json => {
         console.log('Dashboard data recibida:', json);
+        
         const processedData = {
           percent: json.filter(item => item.key === 'percent'),
           scores: json.filter(item => item.key === 'scores'),
-          nps: json.filter(item => item.key === 'nps')
+          nps: json.filter(item => item.key === 'nps'),
+          devoluciones: json.filter(item => item.key === 'devoluciones')
         };
         
         setDashboard(processedData);
@@ -80,10 +82,26 @@ const App = () => {
       });
   }, []);
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Cargando datos…</div>;
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="text-center animate-fade-in">
+        <h1 className="text-4xl font-bold text-slate-800 mb-6 animate-slide-down">
+          Métricas Empresa
+        </h1>
+        <div className="flex items-center justify-center gap-2 animate-slide-up">
+          <span className="text-lg text-slate-600">Powered by</span>
+          <img 
+            src="https://i.vimeocdn.com/player/827126?sig=61658c9aa3e50f445b2339457f1c73a3fb8e29290471ca31061241b89955e45b&v=1" 
+            alt="Logo Corporativo"
+            className="h-12 w-auto animate-pulse"
+          />
+        </div>
+      </div>
+    </div>
+  );
   if (error) return <div className="h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
 
-  const { percent, scores, nps } = dashboard;
+  const { percent, scores, nps, devoluciones } = dashboard;
 
   const CustomTooltip = ({ active, payload, label, isScore = false }) => {
     if (active && payload && payload.length) {
@@ -91,7 +109,7 @@ const App = () => {
         <div className="bg-white p-1 shadow-lg rounded border border-slate-200">
           <p className="text-xs text-slate-600">Sem {label}</p>
           <p className="text-xs font-bold">
-            {isScore ? payload[0].value.toFixed(2) : `${payload[0].value}%`}
+            {isScore ? payload[0].value.toFixed(2) : `${payload[0].value.toFixed(1)}%`}
           </p>
         </div>
       );
@@ -202,7 +220,7 @@ const App = () => {
                    borderRadius: '2px',
                    pointerEvents: 'none'
                  }}>
-              {isScore ? maxVal.toFixed(1) : `${Math.round(maxVal)}%`} {/* Redondeado para % */}
+              {isScore ? maxVal.toFixed(1) : `${maxVal.toFixed(1)}%`}
             </div>
           )}
           {minPt && typeof minPt.week === 'number' && (
@@ -217,7 +235,7 @@ const App = () => {
                    borderRadius: '2px',
                    pointerEvents: 'none'
                  }}>
-              {isScore ? minVal.toFixed(1) : `${Math.round(minVal)}%`} {/* Redondeado para % */}
+              {isScore ? minVal.toFixed(1) : `${minVal.toFixed(1)}%`}
             </div>
           )}
         </div>
@@ -229,14 +247,7 @@ const App = () => {
     <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-1 flex flex-col">
       <div className="w-full h-full flex flex-col gap-0.5">
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-1 flex items-center justify-center">
-            <img 
-              src="https://i.vimeocdn.com/player/827126?sig=61658c9aa3e50f445b2339457f1c73a3fb8e29290471ca31061241b89955e45b&v=1" 
-              alt="Logo Corporativo"
-              className="rounded-md  p-1"
-              style={{ maxHeight: '60%', maxWidth: '60%', objectFit: 'contain' }}
-            />
-          </div>
+          {createEvolutiveChart('% Devoluciones sobre Facturación', devoluciones, 'porcentaje')}
           {createEvolutiveChart('Satisfacción Atención al Alumno', percent, 'Student_Satisfaction')}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
