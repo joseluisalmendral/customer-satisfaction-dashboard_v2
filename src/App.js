@@ -247,7 +247,7 @@ const App = () => {
     <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-1 flex flex-col">
       <div className="w-full h-full flex flex-col gap-0.5">
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          {createEvolutiveChart('% Devoluciones sobre Facturación', devoluciones, 'porcentaje')}
+          {createEvolutiveChart('% Devoluciones sobre Facturación', percent, 'return_percentage_over_invoicing')}
           {createEvolutiveChart('Satisfacción Atención al Alumno', percent, 'Student_Satisfaction')}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
