@@ -248,7 +248,7 @@ const App = () => {
       <div className="w-full h-full flex flex-col gap-0.5">
         <div className="grid grid-cols-2 gap-0.5 flex-1">
           {createEvolutiveChart('% Devoluciones sobre Facturación', percent, 'return_percentage_over_invoicing')}
-          {createEvolutiveChart('Satisfacción Atención al Alumno', percent, 'Student_Satisfaction')}
+          {createEvolutiveChart('Satisfacción Atención al Alumno', percent, 'mean_customer_satisfaction')}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
           {createEvolutiveChart('Puntuación Trustpilot', scores, 'Trustpilot', true)}
