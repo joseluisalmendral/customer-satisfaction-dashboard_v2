@@ -107,7 +107,7 @@ const App = () => {
     };
 
     // Verificar cada 15 minutos (15 * 60 * 1000 = 900000 ms)
-    const interval = setInterval(checkForRefresh, 180000);
+    const interval = setInterval(checkForRefresh, 900000);
 
     // Limpiar intervalo al desmontar
     return () => clearInterval(interval);
