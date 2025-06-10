@@ -148,6 +148,20 @@ const App = () => {
     return null;
   };
 
+  const getTrendIndicator = (currentValue, previousValue, isInverse = false) => {
+    if (currentValue === previousValue) {
+      return <span className="text-yellow-500 ml-1 text-2xl">━</span>;
+    } else if (currentValue > previousValue) {
+      return isInverse ? 
+        <span className="text-red-500 ml-1 text-2xl">▲</span> : 
+        <span className="text-green-500 ml-1 text-2xl">▲</span>;
+    } else {
+      return isInverse ? 
+        <span className="text-green-500 ml-1 text-2xl">▼</span> : 
+        <span className="text-red-500 ml-1 text-2xl">▼</span>;
+    }
+  };
+
   const createEvolutiveChart = (title, data, field, isScore = false, customYDomain = null) => {
     if (!data || data.length === 0) {
         console.warn(`No data for chart: ${title}`);
@@ -188,6 +202,15 @@ const App = () => {
     const minWeek = Math.min(...weeks);
     const maxWeek = Math.max(...weeks);
 
+    // Obtener valores actuales y anteriores para el indicador de tendencia
+    const sortedData = [...data].sort((a, b) => a.week - b.week);
+    const validSortedData = sortedData.filter(d => typeof d[field] === 'number');
+    const currentValue = validSortedData.length > 0 ? validSortedData[validSortedData.length - 1][field] : null;
+    const previousValue = validSortedData.length > 1 ? validSortedData[validSortedData.length - 2][field] : null;
+    
+    // Determinar si este gráfico necesita lógica inversa (como devoluciones)
+    const isInverseTrend = title.includes('Devoluciones');
+
     const activeMonthReferenceTicks = monthReferenceWeeks.filter(
       (weekVal) => weekVal >= minWeek && weekVal <= maxWeek
     );
@@ -209,7 +232,21 @@ const App = () => {
 
     return (
       <div key={title} className="bg-white rounded-lg shadow-sm border border-slate-200 p-0.5 flex-1 flex flex-col">
-        <h2 className="text-base font-bold text-slate-800 px-2">{title}</h2>
+        <div className="flex justify-between items-center px-2">
+          <h2 className="text-base font-bold text-slate-800">{title}</h2>
+          <div className="flex items-center font-semibold text-slate-700">
+            <span>Actual: </span>
+            <span className="ml-2 text-lg">
+              {currentValue !== null ? 
+                (isScore ? currentValue.toFixed(1) : `${currentValue.toFixed(1)}%`) : 
+                'N/A'
+              }
+            </span>
+            {currentValue !== null && previousValue !== null && 
+              getTrendIndicator(currentValue, previousValue, isInverseTrend)
+            }
+          </div>
+        </div>
         <div className="relative flex-1" style={{ minHeight: '80px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top:10, right:15, left:5, bottom:10 }}>
