@@ -296,20 +296,20 @@ const App = () => {
           {createEvolutiveChart('Puntuación Google', scores, 'Google', true)}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          {createEvolutiveChart('NPS Business School', nps, 'Business_School', false, [-80, 90])}
-          {createEvolutiveChart('NPS IA School', nps, 'IA_School', false, [-80, 90])}
+          {createEvolutiveChart('NPS Business School', nps, 'Business_School', false, [-50, 100])}
+          {createEvolutiveChart('NPS IA School', nps, 'IA_School', false, [-50, 100])}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          {createEvolutiveChart('NPS Tech School', nps, 'Tech_School', false, [-80, 90])}
-          {createEvolutiveChart('NPS Pharma', nps, 'Pharma', false, [-80, 90])}
+          {createEvolutiveChart('NPS Tech School', nps, 'Tech_School', false, [-50, 100])}
+          {createEvolutiveChart('NPS Pharma', nps, 'Pharma', false, [-50, 100])}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          {createEvolutiveChart('NPS FP', nps, 'FP', false, [-80, 90])}
-          {createEvolutiveChart('NPS Oposiciones', nps, 'Oposiciones', false, [-80, 90])}
+          {createEvolutiveChart('NPS FP', nps, 'FP', false, [-50, 100])}
+          {createEvolutiveChart('NPS Oposiciones', nps, 'Oposiciones', false, [-50, 100])}
         </div>
         <div className="grid grid-cols-2 gap-0.5 flex-1">
-          {createEvolutiveChart('NPS Tecnio', nps, 'Tecnio', false, [-80, 90])}
-          {createEvolutiveChart('NPS B2B', nps, 'B2B', false, [-80, 90])}
+          {createEvolutiveChart('NPS Tecnio', nps, 'Tecnio', false, [-50, 100])}
+          {createEvolutiveChart('NPS B2B', nps, 'B2B', false, [-50, 100])}
         </div>
       </div>
     </div>
