@@ -282,12 +282,12 @@ const App = () => {
                 activeDot={{ r: 3 }}
                 connectNulls={true}
               />
-              {maxPt && typeof maxPt.week === 'number' && <ReferenceDot x={maxPt.week} y={maxVal} r={3} fill="#10b981" />}
-              {minPt && typeof minPt.week === 'number' && <ReferenceDot x={minPt.week} y={minVal} r={3} fill="#ef4444" />}
+              {maxPt && typeof maxPt.week === 'number' && <ReferenceDot x={maxPt.week} y={maxVal} r={3} fill={isInverseTrend ? "#ef4444" : "#10b981"} />}
+              {minPt && typeof minPt.week === 'number' && <ReferenceDot x={minPt.week} y={minVal} r={3} fill={isInverseTrend ? "#10b981" : "#ef4444"} />}
             </LineChart>
           </ResponsiveContainer>
           {maxPt && typeof maxPt.week === 'number' && (
-            <div className="absolute font-bold text-green-600"
+            <div className={`absolute font-bold ${isInverseTrend ? 'text-red-600' : 'text-green-600'}`}
                  style={{ 
                    left: maxWeek > minWeek ? `${((maxPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%',
                    top: '12px',
@@ -302,7 +302,7 @@ const App = () => {
             </div>
           )}
           {minPt && typeof minPt.week === 'number' && (
-            <div className="absolute font-bold text-red-600"
+            <div className={`absolute font-bold ${isInverseTrend ? 'text-green-600' : 'text-red-600'}`}
                  style={{ 
                    left: maxWeek > minWeek ? `${((minPt.week-minWeek)/(maxWeek-minWeek))*85 + 7}%` : '50%',
                    bottom: '12px',
